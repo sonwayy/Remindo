@@ -12,6 +12,11 @@
         android:theme="@style/Theme.Remindo"
         tools:targetApi="31">
         <activity
+            android:name=".CreateTask"
+            android:exported="false"
+            android:label="@string/title_activity_create_task"
+            android:theme="@style/Theme.Remindo.NoActionBar" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
