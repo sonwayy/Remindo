@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">Remindo</string>
+    <string name="open">Open</string>
+    <string name="close">Close</string>
     <string name="title_activity_create_task">CreateTask</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
