@@ -1,6 +1,8 @@
 package com.example.remindo
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
@@ -13,8 +15,12 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import com.example.mybdd.classes.TaskModelClass
+import com.example.mybdd.handler.DatabaseHandler
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
 import java.util.*
+import kotlin.collections.ArrayList
 
 class MainActivity : AppCompatActivity() {
     lateinit var toggle :ActionBarDrawerToggle
@@ -23,65 +29,80 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
 
+        // List of tasks
+        val listViewTask : ListView = findViewById(R.id.listTask)
+
+        // Navigation Menu
         val drawerlayout : DrawerLayout = findViewById(R.id.drawerLayout)
         val navView : NavigationView = findViewById(R.id.nav_view)
-
         toggle = ActionBarDrawerToggle(this, drawerlayout, R.string.open, R.string.close)
-
 
         drawerlayout.addDrawerListener(toggle)
         toggle.syncState()
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
+
+        //creating the instance of DatabaseHandler class
+        val databaseHandler: DatabaseHandler = DatabaseHandler(this)
+
         navView.setNavigationItemSelectedListener {
-
             when(it.itemId){
+                R.id.status_todo -> {
+                    Toast.makeText(applicationContext, "Clicked A Faire", Toast.LENGTH_SHORT).show()
+                    val tasksByCategory: ArrayList<TaskModelClass> = databaseHandler.viewTaskByStatus("A Faire")
+                    //creating custom ArrayAdapter
+                    val adapterTask : TaskAdapter = TaskAdapter(this, tasksByCategory)
+                    listViewTask.adapter = adapterTask
 
-                R.id.status_todo -> Toast.makeText(applicationContext, "Clicked A Faire", Toast.LENGTH_SHORT).show()
-                R.id.status_inDoing -> Toast.makeText(applicationContext, "Clicked En cours", Toast.LENGTH_SHORT).show()
-                R.id.status_done -> Toast.makeText(applicationContext, "Clicked Terminé", Toast.LENGTH_SHORT).show()
-
+                }
+                R.id.status_inDoing -> {
+                    Toast.makeText(applicationContext, "Clicked En cours", Toast.LENGTH_SHORT).show()
+                    val tasksByCategory: ArrayList<TaskModelClass> = databaseHandler.viewTaskByStatus("En cours")
+                    //creating custom ArrayAdapter
+                    val adapterTask : TaskAdapter = TaskAdapter(this, tasksByCategory)
+                    listViewTask.adapter = adapterTask
+                }
+                R.id.status_done -> {
+                    Toast.makeText(applicationContext, "Clicked Terminé", Toast.LENGTH_SHORT).show()
+                    val tasksByCategory: ArrayList<TaskModelClass> = databaseHandler.viewTaskByStatus("Terminé")
+                    //creating custom ArrayAdapter
+                    val adapterTask : TaskAdapter = TaskAdapter(this, tasksByCategory)
+                    listViewTask.adapter = adapterTask
+                }
             }
             true
         }
 
 
 
-        //val toolbar : Toolbar = findViewById<Toolbar>(R.id.toolbar)
-        //val menu : ImageView = findViewById<ImageView>(R.id.imageMenu)
 
-        //toolbar.setNavigationOnClickListener {
-
-        //}
-
-
-
-
-
-
-
-
-        //we save our tasks in this array
-        val allTasks = arrayListOf("Tache 1", "Tache2", "Tache3")
-        val allTasks2 = arrayListOf<Task>(Task("Vaccin", "A Faire", Date(2023,4, 25)),
-            Task("Tennis", "En cours", Date(2023,7, 15)),
-            Task("Projet informatique", "Terminer", Date(2023,5, 30)))
-
-        val listViewTask : ListView = findViewById(R.id.listTask)
-
-        //ato display correctly each task
-        val adapter : ArrayAdapter<String> = ArrayAdapter<String>(
-            this,
-            android.R.layout.simple_list_item_1,
-            android.R.id.text1,
-            allTasks
-        )
-
-        val adapterTask : TaskAdapter = TaskAdapter(allTasks2, this)
-
+        //read records from database in ListView
+        //creating the instance of DatabaseHandler class
+        //val databaseHandler: DatabaseHandler = DatabaseHandler(this)
+        //calling the viewTask method of DatabaseHandler class to read the records
+        val task: ArrayList<TaskModelClass> = databaseHandler.viewTask()
+        val taskArrayStatus = Array<String>(task.size){"null"}
+        val taskArrayTitle = Array<String>(task.size){"null"}
+        val taskArrayDate = Array<String>(task.size){"null"}
+        var index = 0
+        for(t in task){
+            taskArrayStatus[index] = t.taskStatus
+            taskArrayTitle[index] = t.taskTitle
+            taskArrayDate[index] = t.taskDate
+            println( "---------->>>>>>>>>" + t.taskId)
+            index++
+        }
+        //creating custom ArrayAdapter
+        val adapterTask : TaskAdapter = TaskAdapter(this, task)
         listViewTask.adapter = adapterTask
-        //listViewTask.setBackgroundColor(Color.CYAN)
+
+        // Button to switch on the page to add a task
+        val button : FloatingActionButton = findViewById(R.id.add_task)
+        button.setOnClickListener {
+            val intent = Intent(this@MainActivity, CreateTask::class.java)
+            startActivity(intent)
+        }
 
 
 
@@ -96,66 +117,87 @@ class MainActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-
-}
-
-private class Task(title: String, status : String, date : Date?) {
-    internal var title: String = title
-    internal var status: String = status
-    internal var date: Date? = date
-
-}
-private class TaskAdapter( items: ArrayList<Task>, ctx : Context) : ArrayAdapter<Task>(ctx, R.layout.activity_main, items){
-    private class TaskItemViewHolder {
-        internal var title: TextView? = null
-        internal var status: TextView? = null
-        internal var date: TextView? = null
-        internal var btn: ImageButton? = null
-
+    fun TasksByCategory(status:String){
+        val databaseHandler: DatabaseHandler = DatabaseHandler(this)
     }
 
+
+}
+
+
+private class TaskAdapter(private val ctx : Activity, private val task : ArrayList<TaskModelClass>)
+    : ArrayAdapter<TaskModelClass>(ctx, R.layout.activity_main, task){
+
     override fun getView(position: Int, view: View?, viewGroup: ViewGroup): View {
-        var view = view
+        val inflater = ctx.layoutInflater
+        val rowView = inflater.inflate(R.layout.list_item_task, viewGroup, false)
 
-        val viewHolder : TaskItemViewHolder
+        val titleTask = rowView!!.findViewById(R.id.titre) as TextView
+        val statusTask = rowView!!.findViewById(R.id.status) as TextView
+        val dateTask= rowView!!.findViewById(R.id.date) as TextView
 
-        if (view == null){
-            val inflater = LayoutInflater.from(viewGroup.context)
-            view = inflater.inflate(R.layout.list_item_task, viewGroup, false)
+        titleTask.text = task[position].taskTitle
+        statusTask.text = task[position].taskStatus
+        dateTask.text = task[position].taskDate
+        val databaseHandler: DatabaseHandler = DatabaseHandler(ctx)
 
-            viewHolder = TaskItemViewHolder()
-            viewHolder.title = view!!.findViewById<TextView>(R.id.titre) as TextView
-            viewHolder.status = view!!.findViewById(R.id.status) as TextView
-            viewHolder.date = view!!.findViewById(R.id.date)
-
-        }else{
-            viewHolder = view.tag as TaskItemViewHolder
-        }
-
-        val task = getItem(position)
-        viewHolder.title!!.text = task!!.title
-        viewHolder.status!!.text = task!!.status
-
-        //Change the color of the radioButton of the task according to his status
-        if (task!!.status == "A Faire"){
-            val radioButton = view!!.findViewById<RadioButton>(R.id.radioButton)
+        //Change the color of the radioButton of the task according to his status in database
+        val radioButton = rowView!!.findViewById<RadioButton>(R.id.radioButton)
+        if (statusTask!!.text == "A Faire"){
             val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.grey))
             radioButton.buttonTintList = colorStateList
-        }else if (task!!.status == "En cours"){
-            val radioButton = view!!.findViewById<RadioButton>(R.id.radioButton)
+        }else if (statusTask!!.text == "En cours"){
             val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.yellow))
             radioButton.buttonTintList = colorStateList
         }else{
-            val radioButton = view!!.findViewById<RadioButton>(R.id.radioButton)
             val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.green))
             radioButton.buttonTintList = colorStateList
         }
 
+        //Listener to change the status's color of the task manually
+        radioButton.setOnClickListener {
 
-        viewHolder.date!!.text = task!!.date!!.toString()
 
-        view.tag = viewHolder
+            //change the radioButton's color according to the new status
+            when(statusTask!!.text){
+                "A Faire" -> {
+                    statusTask!!.text = "En cours"
+                    val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.yellow))
+                    radioButton.buttonTintList = colorStateList
+                }
 
-        return view
+                "En cours" -> {
+                    statusTask!!.text = "Terminé"
+                    val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.green))
+                    radioButton.buttonTintList = colorStateList
+                }
+
+                "Terminé" -> {
+                    statusTask!!.text = "A Faire"
+                    val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.grey))
+                    radioButton.buttonTintList = colorStateList
+                }
+            }
+
+            //then change in database the status of the task
+            val databaseHandler: DatabaseHandler = DatabaseHandler(ctx)
+            println("SALUT---------------------------")
+            println(task[position].taskStatus)
+            println(statusTask!!.text.toString())
+
+            task[position].taskStatus = statusTask!!.text.toString()
+            println(task[position].taskStatus)
+            val status = databaseHandler.updateTask(
+                task[position]
+            )
+
+        }
+
+
+
+
+        return rowView
+
+
     }
 }
