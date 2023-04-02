@@ -35,22 +35,22 @@
         android:gravity="end"
         >
 
-    <Button
-        android:id="@+id/modify_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:text="Supprimer"
-        android:onClick="updateTask"
-        android:layout_marginRight="15dp"/>
+        <Button
+            android:id="@+id/delete_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:text="Supprimer"
+            android:onClick="removeTask"
+            android:layout_marginRight="15dp"/>
 
-    <Button
-        android:id="@+id/delete_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:text="Modifier"
-        android:onClick="deleteTask"/>
+        <Button
+            android:id="@+id/modify_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:text="Modifier"
+            android:onClick="updateTask"/>
     </LinearLayout>
 
 

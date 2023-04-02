@@ -3,6 +3,7 @@
     <string name="open">Open</string>
     <string name="close">Close</string>
     <string name="title_activity_create_task">CreateTask</string>
+    <string name="modify_delete_task">ModifyDeleteTask</string>
     <!-- Strings used for fragments for navigation -->
     <string name="first_fragment_label">First Fragment</string>
     <string name="second_fragment_label">Second Fragment</string>
