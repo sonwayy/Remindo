@@ -19,6 +19,7 @@ import com.example.mybdd.classes.TaskModelClass
 import com.example.mybdd.handler.DatabaseHandler
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -145,18 +146,74 @@ private class TaskAdapter(private val ctx : Activity, private val task : ArrayLi
         dateTask.text = task[position].taskDate
         val databaseHandler: DatabaseHandler = DatabaseHandler(ctx)
 
-        //Change the color of the radioButton of the task according to his status in database
+
+        val time = Calendar.getInstance().time  // We retrieve de date of today
+        val formatter = SimpleDateFormat("dd/MM/yyyy") // We format the date like we want
+        val currentDate = formatter.format(time) // We apply the format on the date
+        val date = formatter.parse(currentDate)
+
+
         val radioButton = rowView!!.findViewById<RadioButton>(R.id.radioButton)
-        if (statusTask!!.text == "A Faire"){
-            val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.grey))
-            radioButton.buttonTintList = colorStateList
-        }else if (statusTask!!.text == "En cours"){
-            val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.yellow))
-            radioButton.buttonTintList = colorStateList
-        }else{
+        val nbrDaysBeforeExpiration = dateTask.text.toString().compareTo(currentDate)
+        // nbrDaysBeforeExpiration = (date's expiration of the task) - currentDate
+
+        if (dateTask.text == ""){
+
+            if (statusTask!!.text == "A Faire"){
+                val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.grey))
+                radioButton.buttonTintList = colorStateList
+            }else if (statusTask!!.text == "En cours"){
+                val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.yellow))
+                radioButton.buttonTintList = colorStateList
+            }else{
+                val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.green))
+                radioButton.buttonTintList = colorStateList
+            }
+
+        }
+        else if (statusTask!!.text == "Terminé"){
+
             val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.green))
             radioButton.buttonTintList = colorStateList
+
         }
+        else {
+            when {
+                // '1' is the day before the end of the task
+                // the date's expiration of the task is near or exceed
+                nbrDaysBeforeExpiration > 1 -> {
+                    if (statusTask!!.text == "A Faire"){
+                        val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.grey))
+                        radioButton.buttonTintList = colorStateList
+                    }else if (statusTask!!.text == "En cours"){
+                        val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.yellow))
+                        radioButton.buttonTintList = colorStateList
+                    }
+                }
+                // the date's expiration of the task is not near
+                nbrDaysBeforeExpiration <= 1 -> {
+                    val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.red))
+                    radioButton.buttonTintList = colorStateList
+                    statusTask!!.text = "En retard"
+                }
+                else -> {
+                    println("")
+                }
+            }
+        }
+
+        //Change the color of the radioButton of the task according to his status in database
+        //val radioButton = rowView!!.findViewById<RadioButton>(R.id.radioButton)
+        //if (statusTask!!.text == "A Faire"){
+        //    val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.grey))
+        //    radioButton.buttonTintList = colorStateList
+        //}else if (statusTask!!.text == "En cours"){
+        //    val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.yellow))
+        //    radioButton.buttonTintList = colorStateList
+        //}else{
+        //    val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.green))
+        //    radioButton.buttonTintList = colorStateList
+        //}
 
         //Listener to change the status's color of the task manually
         radioButton.setOnClickListener {
@@ -175,8 +232,20 @@ private class TaskAdapter(private val ctx : Activity, private val task : ArrayLi
                 }
 
                 "Terminé" -> {
-                    statusTask!!.text = "A Faire"
-                    val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.grey))
+                    if (nbrDaysBeforeExpiration <= 1 && dateTask.text != ""){
+                        statusTask!!.text = "En retard"
+                        val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.red))
+                        radioButton.buttonTintList = colorStateList
+                    }else {
+                        statusTask!!.text = "A Faire"
+                        val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.grey))
+                        radioButton.buttonTintList = colorStateList
+                    }
+                }
+
+                "En retard" -> {
+                    statusTask!!.text = "Terminé"
+                    val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.green))
                     radioButton.buttonTintList = colorStateList
                 }
             }
