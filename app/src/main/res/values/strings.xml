@@ -15,4 +15,9 @@
     <string name="CreateTaskTitle">Titre</string>
     <string name="CreateTaskEcheance">Date d\'échéance</string>
     <string name="CreateTaskDescription">Description</string>
+
+    <!-- Strings used for notification's channel-->
+    <string name="CHANNEL_ID">10</string>
+    <string name="channel_name">Remindo_channel</string>
+    <string name="channel_description">channel to communicate task being late</string>
 </resources>

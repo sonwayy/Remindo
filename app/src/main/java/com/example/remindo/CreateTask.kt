@@ -2,6 +2,7 @@ package com.example.remindo
 
 import android.app.DatePickerDialog
 import android.content.Intent
+import android.content.res.ColorStateList
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -9,8 +10,10 @@ import android.widget.DatePicker
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.example.mybdd.classes.TaskModelClass
 import com.example.mybdd.handler.DatabaseHandler
+import java.text.SimpleDateFormat
 import java.util.*
 
 class CreateTask : AppCompatActivity() {
@@ -52,6 +55,7 @@ class CreateTask : AppCompatActivity() {
         val title = findViewById<EditText>(R.id.title_task).text.toString()
         val date = findViewById<EditText>(R.id.date_task).text.toString()
         val description = findViewById<EditText>(R.id.description_task).text.toString()
+
 
         val databaseHandler: DatabaseHandler = DatabaseHandler(this)
         if(title.trim()!=""){
