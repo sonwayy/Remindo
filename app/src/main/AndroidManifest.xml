@@ -17,6 +17,11 @@
             android:label="@string/title_activity_create_task"
             android:theme="@style/Theme.Remindo.NoActionBar" />
         <activity
+            android:name=".ModifyDeleteTask"
+            android:exported="false"
+            android:label="@string/modify_delete_task"
+            android:theme="@style/Theme.Remindo.NoActionBar" />
+        <activity
             android:name=".MainActivity"
             android:exported="true">
             <intent-filter>

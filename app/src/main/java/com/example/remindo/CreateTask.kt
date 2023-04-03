@@ -30,8 +30,8 @@ class CreateTask : AppCompatActivity() {
         descriptionEditText = findViewById(R.id.description_task)
         addButton = findViewById(R.id.add_button)
 
+        // Listener do define the expiration date
         calendar = Calendar.getInstance()
-
         dateEditText.setOnClickListener {
             DatePickerDialog(
                 this,

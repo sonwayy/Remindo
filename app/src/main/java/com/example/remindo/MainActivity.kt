@@ -19,6 +19,7 @@ import com.example.mybdd.classes.TaskModelClass
 import com.example.mybdd.handler.DatabaseHandler
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -128,6 +129,10 @@ class MainActivity : AppCompatActivity() {
 private class TaskAdapter(private val ctx : Activity, private val task : ArrayList<TaskModelClass>)
     : ArrayAdapter<TaskModelClass>(ctx, R.layout.activity_main, task){
 
+    companion object{
+        const val TASK_TO_MODIFY = "task to modify" //Key of to modify/delete the task
+    }
+
     override fun getView(position: Int, view: View?, viewGroup: ViewGroup): View {
         val inflater = ctx.layoutInflater
         val rowView = inflater.inflate(R.layout.list_item_task, viewGroup, false)
@@ -141,23 +146,77 @@ private class TaskAdapter(private val ctx : Activity, private val task : ArrayLi
         dateTask.text = task[position].taskDate
         val databaseHandler: DatabaseHandler = DatabaseHandler(ctx)
 
-        //Change the color of the radioButton of the task according to his status in database
+
+        val time = Calendar.getInstance().time  // We retrieve de date of today
+        val formatter = SimpleDateFormat("dd/MM/yyyy") // We format the date like we want
+        val currentDate = formatter.format(time) // We apply the format on the date
+        val date = formatter.parse(currentDate)
+
+
         val radioButton = rowView!!.findViewById<RadioButton>(R.id.radioButton)
-        if (statusTask!!.text == "A Faire"){
-            val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.grey))
-            radioButton.buttonTintList = colorStateList
-        }else if (statusTask!!.text == "En cours"){
-            val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.yellow))
-            radioButton.buttonTintList = colorStateList
-        }else{
+        val nbrDaysBeforeExpiration = dateTask.text.toString().compareTo(currentDate)
+        // nbrDaysBeforeExpiration = (date's expiration of the task) - currentDate
+
+        if (dateTask.text == ""){
+
+            if (statusTask!!.text == "A Faire"){
+                val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.grey))
+                radioButton.buttonTintList = colorStateList
+            }else if (statusTask!!.text == "En cours"){
+                val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.yellow))
+                radioButton.buttonTintList = colorStateList
+            }else{
+                val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.green))
+                radioButton.buttonTintList = colorStateList
+            }
+
+        }
+        else if (statusTask!!.text == "Terminé"){
+
             val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.green))
             radioButton.buttonTintList = colorStateList
+
         }
+        else {
+            when {
+                // '1' is the day before the end of the task
+                // the date's expiration of the task is near or exceed
+                nbrDaysBeforeExpiration > 1 -> {
+                    if (statusTask!!.text == "A Faire"){
+                        val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.grey))
+                        radioButton.buttonTintList = colorStateList
+                    }else if (statusTask!!.text == "En cours"){
+                        val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.yellow))
+                        radioButton.buttonTintList = colorStateList
+                    }
+                }
+                // the date's expiration of the task is not near
+                nbrDaysBeforeExpiration <= 1 -> {
+                    val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.red))
+                    radioButton.buttonTintList = colorStateList
+                    statusTask!!.text = "En retard"
+                }
+                else -> {
+                    println("")
+                }
+            }
+        }
+
+        //Change the color of the radioButton of the task according to his status in database
+        //val radioButton = rowView!!.findViewById<RadioButton>(R.id.radioButton)
+        //if (statusTask!!.text == "A Faire"){
+        //    val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.grey))
+        //    radioButton.buttonTintList = colorStateList
+        //}else if (statusTask!!.text == "En cours"){
+        //    val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.yellow))
+        //    radioButton.buttonTintList = colorStateList
+        //}else{
+        //    val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.green))
+        //    radioButton.buttonTintList = colorStateList
+        //}
 
         //Listener to change the status's color of the task manually
         radioButton.setOnClickListener {
-
-
             //change the radioButton's color according to the new status
             when(statusTask!!.text){
                 "A Faire" -> {
@@ -173,8 +232,20 @@ private class TaskAdapter(private val ctx : Activity, private val task : ArrayLi
                 }
 
                 "Terminé" -> {
-                    statusTask!!.text = "A Faire"
-                    val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.grey))
+                    if (nbrDaysBeforeExpiration <= 1 && dateTask.text != ""){
+                        statusTask!!.text = "En retard"
+                        val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.red))
+                        radioButton.buttonTintList = colorStateList
+                    }else {
+                        statusTask!!.text = "A Faire"
+                        val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.grey))
+                        radioButton.buttonTintList = colorStateList
+                    }
+                }
+
+                "En retard" -> {
+                    statusTask!!.text = "Terminé"
+                    val colorStateList = ColorStateList.valueOf(ContextCompat.getColor(viewGroup.context, R.color.green))
                     radioButton.buttonTintList = colorStateList
                 }
             }
@@ -190,7 +261,28 @@ private class TaskAdapter(private val ctx : Activity, private val task : ArrayLi
             val status = databaseHandler.updateTask(
                 task[position]
             )
+        }
 
+        // Listener on the title and the date to go to the task edit/delete page
+        // Listener on the title
+        titleTask.setOnClickListener {
+            // 'ctx' is the context of the MainActivity, equivalent to 'this@MainActivty' that we initialize in the class's constructor
+            val intent = Intent(ctx, ModifyDeleteTask::class.java)
+
+            // we put in the intent the task with all his attributs to modify them in the next activity
+            // And the value :
+            var arrayElementsTask: Array<String> = Array<String>(5){"null"}
+            arrayElementsTask[0] = task[position].taskId.toString()
+            arrayElementsTask[1] = task[position].taskTitle
+            arrayElementsTask[2] = task[position].taskDate
+            arrayElementsTask[3] = task[position].taskDescription
+            arrayElementsTask[4] = task[position].taskStatus
+            //intent.putExtra(KEY, VALUE)
+            intent.putExtra(TASK_TO_MODIFY, arrayElementsTask)
+
+            // startActivity is a function of 'this' so like we are not in an activity but in a class
+            //we use 'ctx' to recuperate the 'this' of the 'MainActivity'
+            ctx.startActivity(intent)
         }
 
 
