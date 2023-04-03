@@ -14,4 +14,8 @@
     <item
         android:id="@+id/status_done"
         android:title="Terminé"/>
+
+    <item
+        android:id="@+id/status_late"
+        android:title="En retard"/>
 </menu>
